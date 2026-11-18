@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UEROS</title>
+<style>
+body{background:#111;color:#eee;font-family:-apple-system;text-align:center;padding:40px 24px}
+h2{font-weight:400;letter-spacing:2px}
+#s{width:100%;margin:40px 0}
+#v{font-size:56px;font-weight:200}
+button{padding:14px 40px;font-size:17px;border-radius:40px;border:none;background:#eee;color:#111;margin-top:20px}
+button:disabled{opacity:.3}
+</style>
+</head>
+<body>
+<h2>UEROS</h2>
+<div id="v">0</div>
+<input type="range" id="s" min="0" max="64" value="0">
+<button id="b">连接</button>
+<script>
+let dev, ch, val = 0;
+const s = document.getElementById('s');
+const v = document.getElementById('v');
+const b = document.getElementById('b');
+
+b.onclick = async () => {
+  try {
+    dev = await navigator.bluetooth.requestDevice({
+      filters: [{ namePrefix: 'U-CONCH' }],
+      optionalServices: [0xFFAC]
+    });
+    const server = await dev.gatt.connect();
+    const svc = await server.getPrimaryService(0xFFAC);
+    ch = await svc.getCharacteristic(0xFFB5);
+    b.textContent = '已连接';
+    b.disabled = true;
+  } catch (e) {
+    b.textContent = '连接失败';
+  }
+};
+
+s.oninput = async () => {
+  val = parseInt(s.value);
+  v.textContent = val;
+  if (!ch) return;
+  try {
+    await ch.writeValue(new Uint8Array([val]));
+  } catch (e) {}
+};
+</script>
+</body>
+</html>
